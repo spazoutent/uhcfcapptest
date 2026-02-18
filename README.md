@@ -1,2 +1,0 @@
-# uhcfcapptest
-App for UHCFCBrooklyn
