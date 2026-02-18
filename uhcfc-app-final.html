@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>UHCFC Church App</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#111;display:flex;align-items:center;justify-content:center;font-family:'Barlow',sans-serif;min-height:100vh;padding:16px}
+
+.phone{width:390px;height:844px;background:#0a0a0a;border-radius:50px;box-shadow:0 0 0 2px #2a2a2a,0 0 0 5px #0d0d0d,0 40px 100px rgba(0,0,0,0.85),inset 0 0 0 1px rgba(255,255,255,0.05);overflow:hidden;display:flex;flex-direction:column;position:relative;flex-shrink:0}
+
+/* STATUS BAR */
+.sbar{height:50px;background:#000;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 8px;flex-shrink:0;position:relative;z-index:50}
+.di{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:118px;height:34px;background:#000;border-radius:18px;z-index:2}
+.stime{font-size:15px;font-weight:700;color:#fff}
+.sicons{display:flex;gap:5px;align-items:center}
+
+/* TOP NAV */
+.tnav{height:50px;background:#000;display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.07);z-index:10;position:relative}
+.ham{display:flex;flex-direction:column;gap:4px;padding:6px;cursor:pointer}
+.ham span{display:block;width:20px;height:2px;background:#fff;border-radius:1px}
+.ntitle{font-size:17px;font-weight:700;color:#fff;letter-spacing:0.2px}
+.nright{display:flex;gap:2px}
+.nbtn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;position:relative;color:#fff}
+.ndot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:#e84040;border-radius:50%;border:1.5px solid #000}
+
+/* SCREEN */
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;background:#0a0a0a;scrollbar-width:none;position:relative}
+.screen::-webkit-scrollbar{display:none}
+
+/* TAB BAR */
+.tbar{height:80px;background:#000;border-top:1px solid rgba(255,255,255,0.1);display:flex;align-items:flex-start;padding-top:8px;flex-shrink:0;z-index:10;position:relative}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.ticon-wrap{width:28px;height:28px;display:flex;align-items:center;justify-content:center;position:relative}
+.tlbl{font-size:10px;font-weight:600;color:rgba(255,255,255,0.38);letter-spacing:0.2px;transition:color .15s}
+.tab.on .tlbl{color:#fff}
+.lpip{position:absolute;top:-1px;right:-3px;width:7px;height:7px;background:#e53e3e;border-radius:50%;border:1.5px solid #000;animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.35}}
+
+/* PAGE ANIM */
+.page{animation:pe .2s ease}
+@keyframes pe{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* HERO BANNER */
+.hero{width:100%;height:210px;position:relative;overflow:hidden;background:#0d1b2e;flex-shrink:0}
+.hero-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(232,180,60,0.2) 0%,transparent 65%),radial-gradient(ellipse at 80% 80%,rgba(100,50,200,0.12) 0%,transparent 55%)}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.62) 100%)}
+.sils{position:absolute;bottom:0;left:0;right:0;height:120px;display:flex;align-items:flex-end;padding:0 8px}
+.sil{background:rgba(0,0,0,0.55);border-radius:50% 50% 0 0;flex-shrink:0}
+.hero-content{position:absolute;bottom:14px;left:16px;right:16px}
+.hero-logo{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:#fff;display:flex;align-items:center;gap:8px;line-height:1;margin-bottom:4px}
+.hero-cross{width:30px;height:30px;background:linear-gradient(135deg,#e8b84b,#c47a20);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.hero-tag{font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:2px;text-transform:uppercase}
+
+/* TILES */
+.tgrid{display:flex;flex-direction:column;gap:8px;padding:8px;background:#0a0a0a}
+.tile{border-radius:14px;overflow:hidden;cursor:pointer;position:relative;min-height:96px;display:flex;align-items:center;justify-content:center;transition:transform .15s,filter .15s;user-select:none;-webkit-tap-highlight-color:transparent}
+.tile:active{transform:scale(0.97);filter:brightness(0.9)}
+.tile::before{content:'';position:absolute;inset:0;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E");pointer-events:none;border-radius:inherit}
+.tinner{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 20px;gap:6px;text-align:center;width:100%;position:relative;z-index:1}
+.tlabel{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:#fff;letter-spacing:1px;text-transform:uppercase;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,0.35)}
+.ticon{font-size:22px;opacity:.95}
+.trow{display:flex;gap:8px}
+.trow .tile{flex:1;min-height:98px}
+.trow .tile .tlabel{font-size:22px}
+
+.t-live{background:linear-gradient(135deg,#e8472a,#f07b30);animation:lglow 2.5s ease-in-out infinite}
+@keyframes lglow{0%,100%{box-shadow:0 0 0 0 rgba(232,71,42,0)}50%{box-shadow:0 0 0 6px rgba(232,71,42,0.18)}}
+.t-live .tlabel{font-size:40px;letter-spacing:2px}
+.sig-row{display:flex;gap:2px;align-items:flex-end;height:18px}
+.sigb{width:4px;background:rgba(255,255,255,0.9);border-radius:2px;animation:sig 1s ease-in-out infinite}
+.sigb:nth-child(1){height:6px;animation-delay:0s}.sigb:nth-child(2){height:10px;animation-delay:.15s}.sigb:nth-child(3){height:14px;animation-delay:.3s}.sigb:nth-child(4){height:18px;animation-delay:.45s}.sigb:nth-child(5){height:10px;animation-delay:.6s}
+@keyframes sig{0%,100%{opacity:1;transform:scaleY(1)}50%{opacity:.45;transform:scaleY(.55)}}
+.t-events{background:linear-gradient(135deg,#8e2de2,#c1117a)}
+.t-sermons{background:linear-gradient(135deg,#11c93a,#0ea5e9)}
+.t-bible{background:linear-gradient(135deg,#1a1a2e,#3d1a6e);border:1px solid rgba(140,70,255,0.35)}
+.t-give{background:linear-gradient(135deg,#f7971e,#ffd200)}
+.t-give .tlabel,.t-give .ticon{color:#1a1000!important;text-shadow:none}
+.t-connect{background:linear-gradient(135deg,#00c6fb,#005bea)}
+.t-next{background:linear-gradient(135deg,#667eea,#e879a0)}
+.t-prayer{background:linear-gradient(135deg,#1a1a2e,#2d1b69);border:1px solid rgba(140,70,255,0.3)}
+
+/* ══ WATCH SCREEN ══ */
+/* Live stream embed container */
+.stream-container{width:100%;background:#000;position:relative;flex-shrink:0}
+.stream-label-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#111;border-bottom:1px solid rgba(255,255,255,0.06)}
+.stream-live-badge{display:flex;align-items:center;gap:6px;background:#e53e3e;color:#fff;font-size:10px;font-weight:800;letter-spacing:1.5px;padding:4px 10px;border-radius:5px}
+.stream-live-dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:blink 1.2s infinite}
+.stream-viewers{font-size:12px;color:rgba(255,255,255,0.5);font-weight:600}
+.stream-url-bar{padding:8px 14px;background:#0d0d0d;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:8px}
+.stream-url-text{font-size:11px;color:#4dc8f5;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stream-open-btn{font-size:10px;font-weight:800;background:rgba(77,200,245,0.15);color:#4dc8f5;border:1px solid rgba(77,200,245,0.3);border-radius:6px;padding:4px 10px;cursor:pointer;white-space:nowrap;font-family:'Barlow',sans-serif;text-transform:uppercase;letter-spacing:.5px}
+
+/* The actual iframe embed */
+.stream-iframe-wrap{width:100%;background:#000;position:relative;overflow:hidden}
+.stream-iframe{width:100%;height:100%;border:none;display:block}
+
+/* Stream placeholder (shown before user taps play) */
+.stream-placeholder{width:100%;background:linear-gradient(135deg,#0d1b2a,#1a2a3a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;position:relative;overflow:hidden}
+.sp-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(232,100,30,0.18) 0%,transparent 60%)}
+.sp-cross{position:absolute;font-size:80px;opacity:.04}
+.sp-play{width:64px;height:64px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.28);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:transform .2s,background .2s}
+.sp-play:hover{transform:scale(1.08);background:rgba(255,255,255,0.18)}
+.sp-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;z-index:2;text-align:center;padding:0 20px}
+.sp-tap{font-size:12px;color:rgba(255,255,255,.45);z-index:2;font-weight:500}
+
+/* Info below stream */
+.winfo{padding:12px 16px;background:#111;border-bottom:1px solid rgba(255,255,255,0.06)}
+.wtitle{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.wspk{font-size:12px;color:rgba(255,255,255,.5);font-weight:500}
+.wacts{display:flex;gap:8px;padding:10px 14px;background:#111;border-bottom:1px solid rgba(255,255,255,0.06)}
+.wbtn{flex:1;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;text-transform:uppercase;font-family:'Barlow',sans-serif}
+.wbtn.p{background:#e8472a;color:#fff}
+.wbtn.s{background:rgba(255,255,255,.08);color:rgba(255,255,255,.65)}
+
+/* Past sermons */
+.slist{padding:14px}
+.ssec{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.srow{display:flex;gap:12px;background:#1a1a1a;border-radius:10px;padding:11px;margin-bottom:7px;cursor:pointer;border:1px solid rgba(255,255,255,.05);align-items:center;transition:background .15s}
+.srow:hover{background:#222}
+.sthumb{width:66px;height:44px;border-radius:6px;background:linear-gradient(135deg,#1e3a5f,#0d1b2a);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sinfo{flex:1}
+.sttl{font-size:12px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:2px}
+.smeta{font-size:11px;color:rgba(255,255,255,.4)}
+.sdur{font-size:11px;color:#e8b84b;font-weight:600}
+
+/* ══ GIVE SCREEN ══ */
+.give-hero{padding:22px 20px 18px;background:linear-gradient(135deg,#f7971e,#ffd200);text-align:center}
+.ghtitle{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:900;color:#1a1000;text-transform:uppercase;letter-spacing:1px;line-height:1;margin-bottom:4px}
+.ghverse{font-size:12px;font-weight:600;color:rgba(0,0,0,.5);font-style:italic}
+.gbody{padding:16px 16px 0}
+.glbl{font-size:11px;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
+
+/* Givelify embed tab */
+.give-tabs{display:flex;gap:0;margin-bottom:14px;background:#111;border-radius:12px;padding:4px;border:1px solid rgba(255,255,255,0.07)}
+.give-tab{flex:1;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);transition:all .2s;gap:5px}
+.give-tab.on{background:linear-gradient(135deg,#6a3de8,#9b59b6);color:#fff;box-shadow:0 3px 10px rgba(106,61,232,.35)}
+
+/* Givelify iframe container */
+.givelify-embed-wrap{background:#1a1a1a;border-radius:14px;overflow:hidden;border:1.5px solid rgba(106,61,232,.35);margin-bottom:16px;position:relative}
+.givelify-embed-header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(135deg,#6a3de8,#9b59b6);border-bottom:1px solid rgba(255,255,255,.1)}
+.geh-icon{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1px solid rgba(255,255,255,.2)}
+.geh-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.5px;line-height:1}
+.geh-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+.givelify-iframe{width:100%;border:none;display:block;background:#fff}
+.givelify-fallback{padding:20px;text-align:center}
+.gf-icon{font-size:40px;margin-bottom:10px}
+.gf-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.gf-sub{font-size:12px;color:rgba(255,255,255,.45);line-height:1.6;margin-bottom:14px}
+.gf-btn{display:inline-block;background:linear-gradient(135deg,#6a3de8,#9b59b6);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;padding:10px 24px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;border:none;text-decoration:none}
+
+/* Other payment methods */
+.gmethods{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+.gm{border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;background:#1a1a1a;border:1.5px solid rgba(255,255,255,.07);transition:all .18s;-webkit-tap-highlight-color:transparent}
+.gm:active{transform:scale(.98)}
+.gm-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.gm-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.4px;line-height:1}
+.gm-desc{font-size:11px;color:rgba(255,255,255,.38);margin-top:1px}
+.gm-arr{margin-left:auto;font-size:18px;color:rgba(255,255,255,.25);flex-shrink:0}
+.gm-badge{margin-left:auto;font-size:9px;font-weight:800;padding:3px 7px;border-radius:4px;letter-spacing:.5px;flex-shrink:0;text-transform:uppercase}
+.other-card{background:#111;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.06);margin-bottom:16px}
+.oh{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.oh-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.5px}
+.orow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .15s}
+.orow:last-child{border-bottom:none}
+.orow:hover{background:rgba(255,255,255,.03)}
+.oico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.on2{font-size:13px;font-weight:700;color:#fff}
+.od{font-size:11px;color:rgba(255,255,255,.32);margin-top:1px}
+.oa{color:rgba(255,255,255,.22);font-size:14px;margin-left:auto}
+.give-secure{background:rgba(247,151,30,.07);border:1px solid rgba(247,151,30,.2);border-radius:10px;padding:12px 14px;margin-bottom:16px}
+.gs-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#ffd200;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.gs-sub{font-size:11px;color:rgba(255,255,255,.38);line-height:1.6}
+
+/* ══ BIBLE ══ */
+.bible-hero{padding:16px 18px;background:linear-gradient(135deg,#1a1a2e,#3d1a6e);text-align:center;border-bottom:1px solid rgba(140,70,255,.2)}
+.bh-title{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.bh-sub{font-size:11px;color:rgba(255,255,255,.4)}
+.votd{margin:10px 14px;background:linear-gradient(135deg,rgba(106,61,232,.2),rgba(150,80,255,.06));border:1px solid rgba(106,61,232,.3);border-radius:12px;padding:13px 14px}
+.votd-lbl{font-size:10px;font-weight:800;color:#a57ef5;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.votd-txt{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff;line-height:1.4;margin-bottom:4px}
+.votd-ref{font-size:11px;color:#a57ef5;font-weight:600}
+.bsearch{display:flex;gap:7px;padding:9px 12px;background:#111;border-bottom:1px solid rgba(255,255,255,.05)}
+.bsi{flex:1;height:36px;background:#1e1e1e;border:1.5px solid rgba(255,255,255,.08);border-radius:9px;padding:0 11px;font-size:13px;color:#fff;font-family:'Barlow',sans-serif;outline:none}
+.bsi::placeholder{color:rgba(255,255,255,.25)}
+.bsb{height:36px;padding:0 12px;background:#6a3de8;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase;letter-spacing:.4px}
+.bctrl{display:flex;gap:6px;padding:9px 12px;background:#0f0f0f;border-bottom:1px solid rgba(255,255,255,.05);align-items:center}
+.bsel{flex:1;height:32px;background:#1a1a1a;border:1.5px solid rgba(255,255,255,.08);border-radius:7px;padding:0 8px;font-size:12px;color:#fff;font-family:'Barlow',sans-serif;outline:none;cursor:pointer;min-width:60px}
+.bvsel{height:32px;background:rgba(106,61,232,.18);border:1.5px solid rgba(106,61,232,.38);border-radius:7px;padding:0 7px;font-size:11px;color:#a57ef5;font-family:'Barlow',sans-serif;font-weight:700;outline:none;cursor:pointer}
+.bnav{display:flex;gap:5px;padding:7px 12px;background:#0f0f0f;border-bottom:1px solid rgba(255,255,255,.05)}
+.bnavb{flex:1;height:30px;border-radius:7px;background:#1a1a1a;border:1.5px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5);font-size:11px;font-weight:700;cursor:pointer;font-family:'Barlow',sans-serif;transition:all .15s}
+.bnavb:hover{border-color:rgba(106,61,232,.5);color:#a57ef5}
+.bcurch{flex:2;height:30px;border-radius:7px;background:rgba(106,61,232,.14);border:1.5px solid rgba(106,61,232,.28);color:#a57ef5;font-size:12px;font-weight:800;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;display:flex;align-items:center;justify-content:center;letter-spacing:.5px}
+.btext{padding:10px 12px}
+.verse{display:flex;gap:9px;padding:7px 9px;margin:0 -9px;border-radius:6px;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(255,255,255,.03)}
+.verse:hover{background:rgba(106,61,232,.07)}
+.verse.hl{background:rgba(106,61,232,.16);border-left:3px solid #6a3de8;padding-left:7px}
+.vnum{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#6a3de8;min-width:18px;flex-shrink:0;padding-top:2px}
+.vtxt{font-size:14px;color:rgba(255,255,255,.85);line-height:1.72}
+
+/* ══ CONNECT ══ */
+.conn-hero{padding:20px 18px;background:linear-gradient(135deg,#00c6fb,#005bea);text-align:center}
+.ch-title{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px}
+.ch-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:3px}
+.stf{padding:12px 14px}
+.stf-t{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.stf-row{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.stf-row::-webkit-scrollbar{display:none}
+.sc{flex-shrink:0;text-align:center;width:72px;cursor:pointer}
+.sav{width:56px;height:56px;border-radius:50%;background:#1e1e1e;border:2px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 5px}
+.snm{font-size:9px;font-weight:700;color:#fff;line-height:1.3}
+.srl{font-size:9px;color:#00c6fb;font-weight:600;margin-top:1px}
+.ctiles{padding:0 10px 14px;display:flex;flex-direction:column;gap:7px}
+.ct{border-radius:11px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;background:#1a1a1a;border:1px solid rgba(255,255,255,.06);transition:transform .15s;-webkit-tap-highlight-color:transparent}
+.ct:active{transform:scale(.98)}
+.ct-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ct-name{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.4px;margin-bottom:1px}
+.ct-desc{font-size:11px;color:rgba(255,255,255,.36);line-height:1.4}
+.ct-arr{margin-left:auto;font-size:17px;color:rgba(255,255,255,.22);flex-shrink:0}
+
+/* ══ EVENTS ══ */
+.ev-hero{padding:20px 18px;background:linear-gradient(135deg,#8e2de2,#c1117a);text-align:center}
+.eh-title{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px}
+.evlist{padding:10px;display:flex;flex-direction:column;gap:8px}
+.ecard{background:#1a1a1a;border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.ecard:hover{border-color:rgba(255,255,255,.15)}
+.eban{height:84px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;overflow:hidden}
+.eban::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 35%,rgba(26,26,26,.7))}
+.ebody{padding:11px 13px 13px}
+.etag{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;padding:3px 8px;border-radius:4px;margin-bottom:5px}
+.etitle{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.edet{font-size:11px;color:rgba(255,255,255,.4)}
+.ersvp{display:inline-flex;align-items:center;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:6px 13px;border-radius:6px;margin-top:9px;cursor:pointer}
+
+/* ══ AUTH ══ */
+.auth-hero{padding:28px 22px 22px;background:linear-gradient(160deg,#0d1b2a,#1a2a3a);text-align:center;position:relative;overflow:hidden}
+.auth-hero::before{content:'✝';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:90px;color:rgba(255,255,255,.03);pointer-events:none}
+.auth-logo{width:56px;height:56px;background:linear-gradient(135deg,#e8b84b,#c47a20);border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 11px;box-shadow:0 6px 20px rgba(232,184,75,.35)}
+.auth-cname{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;line-height:1;margin-bottom:3px}
+.auth-csub{font-size:12px;color:rgba(255,255,255,.38)}
+.auth-tabs{display:flex;margin:12px 16px 0;background:#111;border-radius:10px;padding:4px;border:1px solid rgba(255,255,255,.06)}
+.at{flex:1;height:33px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.38)}
+.at.on{background:linear-gradient(135deg,#e8472a,#f07b30);color:#fff;box-shadow:0 3px 10px rgba(232,71,42,.35)}
+.auth-form{padding:14px 16px}
+.afl{font-size:10px;font-weight:700;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:5px}
+.ain{width:100%;height:46px;background:#1a1a1a;border:1.5px solid rgba(255,255,255,.08);border-radius:9px;padding:0 13px;font-size:14px;color:#fff;font-family:'Barlow',sans-serif;outline:none;transition:border-color .2s;margin-bottom:10px}
+.ain:focus{border-color:rgba(232,71,42,.55)}
+.ain::placeholder{color:rgba(255,255,255,.2)}
+.afgt{text-align:right;font-size:12px;color:#e8472a;font-weight:600;cursor:pointer;margin:-4px 0 11px}
+.asub{width:100%;height:50px;border:none;border-radius:11px;background:linear-gradient(135deg,#e8472a,#f07b30);font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;cursor:pointer;box-shadow:0 5px 18px rgba(232,71,42,.4);transition:transform .15s;margin-bottom:12px}
+.asub:hover{transform:translateY(-1px)}
+.aor{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.aorline{flex:1;height:1px;background:rgba(255,255,255,.07)}
+.aortxt{font-size:11px;color:rgba(255,255,255,.25);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.asocial{display:flex;gap:7px;margin-bottom:14px}
+.asocial-btn{flex:1;height:42px;border-radius:9px;border:1.5px solid rgba(255,255,255,.1);background:#1a1a1a;display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;font-weight:700;color:rgba(255,255,255,.6);cursor:pointer;font-family:'Barlow',sans-serif;transition:all .2s}
+.asocial-btn:hover{border-color:rgba(255,255,255,.2);background:#222}
+.aterms{font-size:11px;color:rgba(255,255,255,.26);text-align:center;line-height:1.6;margin-bottom:7px}
+.aterms span{color:#e8472a;cursor:pointer}
+.askip{text-align:center;font-size:12px;color:rgba(255,255,255,.35);cursor:pointer;padding:6px}
+.askip span{color:#e8472a;font-weight:600}
+
+/* ══ MORE ══ */
+.more-ph{padding:16px;background:#111;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px}
+.more-av{width:56px;height:56px;border-radius:50%;background:#1e1e1e;border:2px solid rgba(255,255,255,.13);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.more-nm{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.4px}
+.more-tg{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+.more-ed{margin-left:auto;font-size:11px;font-weight:700;color:#e8472a;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.mlist{padding:8px}
+.mgrp{font-size:10px;font-weight:800;color:rgba(255,255,255,.26);text-transform:uppercase;letter-spacing:2px;padding:8px 7px 5px}
+.mrow{display:flex;align-items:center;gap:11px;background:#1a1a1a;border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:12px;margin-bottom:5px;cursor:pointer;transition:background .15s}
+.mrow:hover{background:#222}
+.mrico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.mrlbl{flex:1;font-size:13px;font-weight:700;color:#fff}
+.mrbadge{background:#e8472a;color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.4px}
+.mrarr{color:rgba(255,255,255,.22);font-size:14px}
+
+/* PUSH SHEET */
+.push-ov{position:absolute;inset:0;background:rgba(0,0,0,.85);z-index:200;display:flex;align-items:flex-end;backdrop-filter:blur(6px);animation:fo .25s ease}
+@keyframes fo{from{opacity:0}to{opacity:1}}
+.push-sheet{width:100%;background:#181818;border-top-left-radius:26px;border-top-right-radius:26px;padding:16px 18px 32px;border-top:1px solid rgba(255,255,255,.1);animation:su .35s cubic-bezier(.34,1.4,.64,1)}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.phdl{width:36px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin:0 auto 15px}
+.phdr{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+.paico{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#e8472a,#f07b30);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.panm{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.5px}
+.pasub{font-size:11px;color:rgba(255,255,255,.36);margin-top:1px}
+.ptitle{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+.pdesc{font-size:12px;color:rgba(255,255,255,.48);line-height:1.6;margin-bottom:13px}
+.pprev{background:#222;border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:11px 12px;display:flex;align-items:center;gap:9px;margin-bottom:15px}
+.ppico{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#e8472a,#f07b30);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.pptitle{font-size:12px;font-weight:700;color:#fff}
+.ppbody{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+.pptime{font-size:10px;color:rgba(255,255,255,.26);margin-left:auto;flex-shrink:0}
+.pbtns{display:flex;gap:8px}
+.pbtn{flex:1;height:48px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center}
+.pbtn.allow{background:linear-gradient(135deg,#e8472a,#f07b30);color:#fff}
+.pbtn.deny{background:rgba(255,255,255,.08);color:rgba(255,255,255,.45)}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- Status Bar -->
+  <div class="sbar">
+    <div class="di"></div>
+    <span class="stime" id="clock">10:26</span>
+    <div class="sicons">
+      <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1" fill="white"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="white"/><rect x="9" y="0" width="3" height="12" rx="1" fill="white"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="white" opacity="0.35"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.4C5.6 2.4 3.4 3.4 1.8 5L0 3.2C2.2 1.2 5 0 8 0s5.8 1.2 8 3.2L14.2 5C12.6 3.4 10.4 2.4 8 2.4z" fill="white"/><path d="M8 5.6c-1.6 0-3 .6-4 1.6L2.2 5.4C3.6 4 5.7 3.2 8 3.2s4.4.8 5.8 2.2L12 7.2c-1-1-2.4-1.6-4-1.6z" fill="white"/><circle cx="8" cy="10" r="2" fill="white"/></svg>
+      <svg width="27" height="13" viewBox="0 0 27 13"><rect x="0" y="1" width="23" height="11" rx="3" fill="none" stroke="white" stroke-width="1.1" opacity="0.5"/><rect x="1" y="2" width="20" height="9" rx="2" fill="white"/><rect x="24" y="4.5" width="3" height="4" rx="1" fill="white" opacity="0.4"/></svg>
+    </div>
+  </div>
+
+  <!-- Top Nav -->
+  <div class="tnav">
+    <div class="ham"><span></span><span></span><span></span></div>
+    <div class="ntitle" id="navTitle">Home</div>
+    <div class="nright">
+      <div class="nbtn" onclick="showPush()">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="ndot"></div>
+      </div>
+      <div class="nbtn" onclick="goTab('auth')">
+        <svg width="19" height="19" id="userIcon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen -->
+  <div class="screen" id="screen"></div>
+
+  <!-- Tab Bar -->
+  <div class="tbar">
+    <div class="tab on" id="tab-home" onclick="goTab('home')">
+      <div class="ticon-wrap">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div class="tlbl">Home</div>
+    </div>
+    <div class="tab" id="tab-watch" onclick="goTab('watch')">
+      <div class="ticon-wrap">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <div class="lpip"></div>
+      </div>
+      <div class="tlbl">Watch</div>
+    </div>
+    <div class="tab" id="tab-bible" onclick="goTab('bible')">
+      <div class="ticon-wrap">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </div>
+      <div class="tlbl">Bible</div>
+    </div>
+    <div class="tab" id="tab-give" onclick="goTab('give')">
+      <div class="ticon-wrap">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </div>
+      <div class="tlbl">Give</div>
+    </div>
+    <div class="tab" id="tab-more" onclick="goTab('more')">
+      <div class="ticon-wrap">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </div>
+      <div class="tlbl">More</div>
+    </div>
+  </div>
+</div>
+
+<!-- Push Sheet -->
+<div class="push-ov" id="pushSheet" style="display:none" onclick="hidePush()">
+  <div class="push-sheet" onclick="event.stopPropagation()">
+    <div class="phdl"></div>
+    <div class="phdr">
+      <div class="paico">✝</div>
+      <div><div class="panm">UHCFC Church App</div><div class="pasub">United Holiness Church</div></div>
+    </div>
+    <div class="ptitle">Stay Connected to God's Word</div>
+    <div class="pdesc">Get notified about live services, new sermons, events, prayer confirmations, and giving receipts — straight to your device.</div>
+    <div class="pprev">
+      <div class="ppico">✝</div>
+      <div style="flex:1"><div class="pptitle">Sunday Service starts in 1 hour</div><div class="ppbody">Join us live — streaming at uhcfc.online.church</div></div>
+      <div class="pptime">now</div>
+    </div>
+    <div class="pbtns">
+      <button class="pbtn deny" onclick="hidePush()">Not Now</button>
+      <button class="pbtn allow" onclick="hidePush()">Allow →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────
+let activeTab = 'home';
+let isLoggedIn = false;
+let authMode = 'login';
+let giveTab = 'givelify';   // which give sub-tab
+let streamLoaded = false;   // has user tapped play on stream?
+let highlighted = new Set();
+let bibleBook = 'John', bibleChapter = 3, bibleVersion = 'KJV';
+
+const TAB_TITLES = {home:'Home',watch:'Watch Live',bible:'Holy Bible',give:'Give',connect:'Connect',events:'Events',more:'More',auth:'My Account'};
+
+// ── BIBLE DATA ──────────────────────────────────────
+const BIBLE = {
+  Genesis:{1:["In the beginning God created the heaven and the earth.","And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.","And God said, Let there be light: and there was light.","And God saw the light, that it was good: and God divided the light from the darkness.","And God called the light Day, and the darkness he called Night. And the evening and the morning were the first day.","And God said, Let there be a firmament in the midst of the waters, and let it divide the waters from the waters.","And God made the firmament, and divided the waters which were under the firmament from the waters which were above the firmament: and it was so.","And God called the firmament Heaven. And the evening and the morning were the second day.","And God said, Let the waters under the heaven be gathered together unto one place, and let the dry land appear: and it was so.","And God called the dry land Earth; and the gathering together of the waters called he Seas: and God saw that it was good."]},
+  Psalms:{23:["The LORD is my shepherd; I shall not want.","He maketh me to lie down in green pastures: he leadeth me beside the still waters.","He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.","Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.","Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.","Surely goodness and mercy shall follow me all the days of my life: and I will dwell in the house of the LORD for ever."],91:["He that dwelleth in the secret place of the most High shall abide under the shadow of the Almighty.","I will say of the LORD, He is my refuge and my fortress: my God; in him will I trust.","Surely he shall deliver thee from the snare of the fowler, and from the noisome pestilence.","He shall cover thee with his feathers, and under his wings shalt thou trust: his truth shall be thy shield and buckler.","Thou shalt not be afraid for the terror by night; nor for the arrow that flieth by day.","Because thou hast made the LORD, which is my refuge, even the most High, thy habitation; there shall no evil befall thee."]},
+  John:{1:["In the beginning was the Word, and the Word was with God, and the Word was God.","The same was in the beginning with God.","All things were made by him; and without him was not any thing made that was made.","In him was life; and the life was the light of men.","And the light shineth in darkness; and the darkness comprehended it not.","There was a man sent from God, whose name was John.","The same came for a witness, to bear witness of the Light, that all men through him might believe.","He was not that Light, but was sent to bear witness of that Light.","That was the true Light, which lighteth every man that cometh into the world.","He was in the world, and the world was made by him, and the world knew him not."],3:["There was a man of the Pharisees, named Nicodemus, a ruler of the Jews:","The same came to Jesus by night, and said unto him, Rabbi, we know that thou art a teacher come from God: for no man can do these miracles that thou doest, except God be with him.","Jesus answered and said unto him, Verily, verily, I say unto thee, Except a man be born again, he cannot see the kingdom of God.","Nicodemus saith unto him, How can a man be born when he is old? can he enter the second time into his mother's womb, and be born?","Jesus answered, Verily, verily, I say unto thee, Except a man be born of water and of the Spirit, he cannot enter into the kingdom of God.","That which is born of the flesh is flesh; and that which is born of the Spirit is spirit.","Marvel not that I said unto thee, Ye must be born again.","The wind bloweth where it listeth, and thou hearest the sound thereof, but canst not tell whence it cometh, and whither it goeth: so is every one that is born of the Spirit.","Jesus answered and said unto him, Art thou a master of Israel, and knowest not these things?","Verily, verily, I say unto thee, We speak that we do know, and testify that we have seen; and ye receive not our witness.","If I have told you earthly things, and ye believe not, how shall ye believe, if I tell you of heavenly things?","And no man hath ascended up to heaven, but he that came down from heaven, even the Son of man which is in heaven.","And as Moses lifted up the serpent in the wilderness, even so must the Son of man be lifted up:","That whosoever believeth in him should not perish, but have eternal life.","For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.","For God sent not his Son into the world to condemn the world; but that the world through him might be saved."]},
+  Romans:{8:["There is therefore now no condemnation to them which are in Christ Jesus, who walk not after the flesh, but after the Spirit.","For the law of the Spirit of life in Christ Jesus hath made me free from the law of sin and death.","For to be carnally minded is death; but to be spiritually minded is life and peace.","And we know that all things work together for good to them that love God, to them who are the called according to his purpose.","What shall we then say to these things? If God be for us, who can be against us?","He that spared not his own Son, but delivered him up for us all, how shall he not with him also freely give us all things?","Who shall separate us from the love of Christ? shall tribulation, or distress, or persecution, or famine, or nakedness, or peril, or sword?","Nay, in all these things we are more than conquerors through him that loved us.","For I am persuaded, that neither death, nor life, nor angels, nor principalities, nor powers, nor things present, nor things to come, nor height, nor depth, nor any other creature, shall be able to separate us from the love of God, which is in Christ Jesus our Lord."]},
+  Proverbs:{3:["Trust in the LORD with all thine heart; and lean not unto thine own understanding.","In all thy ways acknowledge him, and he shall direct thy paths.","Be not wise in thine own eyes: fear the LORD, and depart from evil.","Honour the LORD with thy substance, and with the firstfruits of all thine increase:","So shall thy barns be filled with plenty, and thy presses shall burst out with new wine."]},
+  Isaiah:{40:["Hast thou not known? hast thou not heard, that the everlasting God, the LORD, the Creator of the ends of the earth, fainteth not, neither is weary?","He giveth power to the faint; and to them that have no might he increaseth strength.","Even the youths shall faint and be weary, and the young men shall utterly fall:","But they that wait upon the LORD shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint."]}
+};
+const BOOKS = Object.keys(BIBLE);
+const VERSIONS = ['KJV','NIV','ESV','NKJV','NLT'];
+
+// ── CLOCK ────────────────────────────────────────────
+function updateClock(){
+  const n=new Date(),h=n.getHours()%12||12,m=n.getMinutes();
+  document.getElementById('clock').textContent=`${h}:${m<10?'0'+m:m}`;
+}
+updateClock(); setInterval(updateClock,15000);
+
+// ── PUSH ─────────────────────────────────────────────
+function showPush(){const p=document.getElementById('pushSheet');p.style.display='flex';}
+function hidePush(){document.getElementById('pushSheet').style.display='none';}
+
+// ── NAVIGATION ───────────────────────────────────────
+function goTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const el=document.getElementById('tab-'+tab);
+  if(el)el.classList.add('on');
+  document.getElementById('navTitle').textContent=TAB_TITLES[tab]||'UHCFC';
+  render(tab);
+}
+
+// ── RENDER ───────────────────────────────────────────
+function render(tab){
+  const s=document.getElementById('screen');
+  const d=document.createElement('div');
+  d.className='page';
+  const map={home:homeHTML,watch:watchHTML,give:giveHTML,bible:bibleHTML,connect:connectHTML,events:eventsHTML,more:moreHTML,auth:authHTML};
+  d.innerHTML=(map[tab]||homeHTML)();
+  s.innerHTML='';
+  s.appendChild(d);
+}
+
+// ════════════════════════════════════════════════════
+// HOME
+// ════════════════════════════════════════════════════
+function homeHTML(){
+  return `
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-overlay"></div>
+  <div class="sils">
+    ${[{w:24,h:75},{w:18,h:58},{w:28,h:92},{w:22,h:102},{w:34,h:86},{w:20,h:70},{w:26,h:98},{w:16,h:62},{w:30,h:88}].map(s=>`<div class="sil" style="width:${s.w}px;height:${s.h}px;margin:0 2px"></div>`).join('')}
+  </div>
+  <div class="hero-content">
+    <div class="hero-logo"><div class="hero-cross">✝</div>United Holiness Church</div>
+    <div class="hero-tag">Your story is safe here · Your story can change here</div>
+  </div>
+</div>
+<div class="tgrid">
+  <div class="tile t-live" style="min-height:106px" onclick="goTab('watch')">
+    <div class="tinner">
+      <div class="sig-row">${[0,1,2,3,4].map(_=>`<div class="sigb"></div>`).join('')}</div>
+      <div class="tlabel" style="font-size:38px;letter-spacing:2px">LIVESTREAM</div>
+    </div>
+  </div>
+  <div class="tile t-events" style="min-height:104px" onclick="goTab('events')">
+    <div class="tinner">
+      <div class="tlabel" style="font-size:27px;line-height:1.1">REGISTER FOR<br>AN EVENT</div>
+      <div class="ticon">📅</div>
+    </div>
+  </div>
+  <div class="tile t-sermons" style="min-height:104px" onclick="goTab('watch')">
+    <div class="tinner">
+      <div class="tlabel">SERMONS</div>
+      <div class="ticon" style="font-size:26px">▶</div>
+    </div>
+  </div>
+  <div class="trow">
+    <div class="tile t-give" style="min-height:96px" onclick="goTab('give')">
+      <div class="tinner"><div class="tlabel" style="color:#1a1000">GIVE</div><div class="ticon">💛</div></div>
+    </div>
+    <div class="tile t-bible" style="min-height:96px" onclick="goTab('bible')">
+      <div class="tinner"><div class="tlabel">BIBLE</div><div class="ticon">📖</div></div>
+    </div>
+  </div>
+  <div class="tile t-connect" style="min-height:96px" onclick="goTab('connect')">
+    <div class="tinner"><div class="tlabel">CONNECT</div><div class="ticon">🤝</div></div>
+  </div>
+  <div class="tile t-next" style="min-height:104px" onclick="goTab('connect')">
+    <div class="tinner">
+      <div class="tlabel" style="font-size:27px;line-height:1.1">TAKE YOUR<br>NEXT STEP</div>
+      <div class="ticon">›</div>
+    </div>
+  </div>
+  <div class="tile t-prayer" style="min-height:86px">
+    <div class="tinner"><div class="tlabel" style="font-size:25px">PRAYER REQUEST</div><div class="ticon">🙏</div></div>
+  </div>
+</div>`;}
+
+// ════════════════════════════════════════════════════
+// WATCH — embedded iframe for uhcfc.online.church
+// ════════════════════════════════════════════════════
+function watchHTML(){
+  // The stream iframe is loaded when user taps the play area
+  const streamEmbed = streamLoaded
+    ? `<div class="stream-iframe-wrap" style="height:200px">
+        <iframe class="stream-iframe" 
+          src="https://uhcfc.online.church"
+          allow="autoplay; fullscreen; camera; microphone"
+          allowfullscreen
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+          style="height:200px">
+        </iframe>
+       </div>`
+    : `<div class="stream-placeholder" style="height:200px" onclick="loadStream()" id="streamPlaceholder">
+        <div class="sp-glow"></div>
+        <div class="sp-cross">✝</div>
+        <div class="sp-play">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div class="sp-title">Watch UHCFC Live</div>
+        <div class="sp-tap">Tap to load stream</div>
+       </div>`;
+
+  return `
+<div style="background:#000">
+  <!-- Live badge bar -->
+  <div class="stream-label-bar">
+    <div class="stream-live-badge"><div class="stream-live-dot"></div>LIVE</div>
+    <div class="stream-viewers">👁 1,247 watching</div>
+  </div>
+
+  <!-- The embed / placeholder -->
+  <div class="stream-container">${streamEmbed}</div>
+
+  <!-- URL bar -->
+  <div class="stream-url-bar">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4dc8f5" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    <span class="stream-url-text">uhcfc.online.church</span>
+    <button class="stream-open-btn" onclick="window.open('https://uhcfc.online.church','_blank')">Open Full ↗</button>
+  </div>
+
+  <!-- Info -->
+  <div class="winfo">
+    <div class="wtitle">"Walking in the Spirit of God"</div>
+    <div class="wspk">Pastor James Williams · Sunday Morning Service</div>
+  </div>
+  <div class="wacts">
+    <button class="wbtn p" onclick="loadStream()">▶ ${streamLoaded?'Reload':'Watch Live'}</button>
+    <button class="wbtn s">💬 Live Chat</button>
+    <button class="wbtn s">📖 Sermon Notes</button>
+  </div>
+
+  <!-- Past Sermons -->
+  <div class="slist">
+    <div class="ssec">Past Sermons</div>
+    ${[
+      {t:"Faith That Moves Mountains",s:"Pastor Williams",d:"Feb 11",dur:"52 min",e:"🏔️"},
+      {t:"The Power of Forgiveness",s:"Elder Brown",d:"Feb 4",dur:"44 min",e:"🕊️"},
+      {t:"Rooted in His Word",s:"Pastor Williams",d:"Jan 28",dur:"47 min",e:"🌿"},
+      {t:"New Year, New Purpose",s:"Bishop Thompson",d:"Jan 5",dur:"55 min",e:"🌟"},
+      {t:"He's Still Working",s:"Pastor Williams",d:"Dec 29",dur:"49 min",e:"⚒️"},
+    ].map(s=>`
+    <div class="srow">
+      <div class="sthumb">${s.e}</div>
+      <div class="sinfo"><div class="sttl">${s.t}</div><div class="smeta">${s.s} · ${s.d}</div></div>
+      <div class="sdur">${s.dur}</div>
+    </div>`).join('')}
+  </div>
+</div>`;}
+
+function loadStream(){
+  streamLoaded=true;
+  render('watch');
+}
+
+// ════════════════════════════════════════════════════
+// GIVE — Givelify embedded iframe + other methods
+// ════════════════════════════════════════════════════
+function giveHTML(){
+  const givelifyEmbed = `
+<div class="givelify-embed-wrap">
+  <div class="givelify-embed-header">
+    <div class="geh-icon">🙌</div>
+    <div>
+      <div class="geh-title">Givelify · Secure Giving</div>
+      <div class="geh-sub">United Holiness Church FC</div>
+    </div>
+  </div>
+  <iframe 
+    class="givelify-iframe"
+    src="https://app.givelify.com/givelify/donate/ID0NmY2NGQ5MjFmMjc3Zjk0OGE3NzNiNWM4NzA3ZTlm0"
+    style="height:340px"
+    allow="payment"
+    sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"
+    title="Give with Givelify"
+    onerror="this.style.display='none';document.getElementById('giv-fallback').style.display='block'"
+  ></iframe>
+  <div id="giv-fallback" class="givelify-fallback" style="display:none">
+    <div class="gf-icon">🙌</div>
+    <div class="gf-title">Give with Givelify</div>
+    <div class="gf-sub">Tap below to open our secure Givelify giving page for United Holiness Church.</div>
+    <a class="gf-btn" href="https://app.givelify.com" target="_blank">Open Givelify →</a>
+  </div>
+</div>`;
+
+  const otherMethods = `
+<div class="glbl">More Ways to Give</div>
+<div class="gmethods">
+  <div class="gm" style="border-color:rgba(255,255,255,.14)">
+    <div class="gm-ico" style="background:rgba(0,0,0,.35)">🍎</div>
+    <div style="flex:1"><div class="gm-name">Apple Pay</div><div class="gm-desc">One-tap with Face ID / Touch ID</div></div>
+    <div class="gm-badge" style="color:#34c759;background:rgba(52,199,89,.14)">INSTANT</div>
+  </div>
+  <div class="gm" style="border-color:rgba(54,179,126,.25)">
+    <div class="gm-ico" style="background:rgba(54,179,126,.12)">💚</div>
+    <div style="flex:1"><div class="gm-name">Zelle</div><div class="gm-desc">Send directly to giving@uhcfc.org</div></div>
+    <div class="gm-arr">›</div>
+  </div>
+  <div class="gm" style="border-color:rgba(0,90,234,.25)">
+    <div class="gm-ico" style="background:rgba(0,90,234,.12)">🏦</div>
+    <div style="flex:1"><div class="gm-name">Bank Transfer / ACH</div><div class="gm-desc">Set up automatic recurring giving</div></div>
+    <div class="gm-badge" style="color:#00c6fb;background:rgba(0,198,251,.12)">RECURRING</div>
+  </div>
+</div>
+<div class="other-card">
+  <div class="oh"><div class="oh-title">Additional Options</div></div>
+  <div class="orow">
+    <div class="oico" style="background:rgba(247,151,30,.14)">💝</div>
+    <div><div class="on2">Planned Giving</div><div class="od">Legacy &amp; estate donations</div></div>
+    <div class="oa">›</div>
+  </div>
+  <div class="orow">
+    <div class="oico" style="background:rgba(100,140,220,.12)">📧</div>
+    <div><div class="on2">Mail a Check</div><div class="od">PO Box 1234 · Atlanta, GA 30301</div></div>
+    <div class="oa">›</div>
+  </div>
+</div>
+<div class="give-secure">
+  <div class="gs-title">🔒 100% Secure &amp; Encrypted</div>
+  <div class="gs-sub">All giving is processed through trusted, bank-grade encrypted payment partners. Your financial data is never stored by UHCFC.</div>
+</div>`;
+
+  return `
+<div class="give-hero">
+  <div class="ghtitle">Give</div>
+  <div class="ghverse">"Each of you should give what you have decided in your heart." — 2 Cor. 9:7</div>
+</div>
+<div class="gbody">
+  <div class="glbl" style="margin-bottom:12px">Online Giving — Powered by Givelify</div>
+  ${givelifyEmbed}
+  ${otherMethods}
+</div>`;}
+
+// ════════════════════════════════════════════════════
+// BIBLE
+// ════════════════════════════════════════════════════
+function bibleHTML(){
+  const chapters=Object.keys(BIBLE[bibleBook]||{}).map(Number);
+  if(!chapters.includes(bibleChapter))bibleChapter=chapters[0]||1;
+  const verses=BIBLE[bibleBook]?.[bibleChapter]||[];
+  return `
+<div class="bible-hero">
+  <div class="bh-title">Holy Bible</div>
+  <div class="bh-sub">Tap any verse to highlight · KJV & more</div>
+</div>
+<div class="votd">
+  <div class="votd-lbl">✨ Verse of the Day</div>
+  <div class="votd-txt">"For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life."</div>
+  <div class="votd-ref">John 3:16 · KJV</div>
+</div>
+<div class="bsearch">
+  <input class="bsi" id="bsearchInput" placeholder="Search the Bible…" onkeydown="if(event.key==='Enter')doSearch()"/>
+  <button class="bsb" onclick="doSearch()">Search</button>
+</div>
+<div class="bctrl">
+  <select class="bsel" onchange="bibleBook=this.value;bibleChapter=Number(Object.keys(BIBLE[bibleBook]||{})[0]||1);render('bible')">
+    ${BOOKS.map(b=>`<option value="${b}"${b===bibleBook?' selected':''}>${b}</option>`).join('')}
+  </select>
+  <select class="bsel" onchange="bibleChapter=Number(this.value);render('bible')">
+    ${chapters.map(c=>`<option value="${c}"${c===bibleChapter?' selected':''}>Ch. ${c}</option>`).join('')}
+  </select>
+  <select class="bvsel" onchange="bibleVersion=this.value">
+    ${VERSIONS.map(v=>`<option value="${v}"${v===bibleVersion?' selected':''}>${v}</option>`).join('')}
+  </select>
+</div>
+<div class="bnav">
+  <button class="bnavb" onclick="bibleNav(-1)">← Prev</button>
+  <div class="bcurch">${bibleBook} · Ch. ${bibleChapter}</div>
+  <button class="bnavb" onclick="bibleNav(1)">Next →</button>
+</div>
+<div class="btext">
+  ${verses.length
+    ? verses.map((v,i)=>{const k=`${bibleBook}-${bibleChapter}-${i}`;return`<div class="verse${highlighted.has(k)?' hl':''}" onclick="toggleHL('${k}',this)"><span class="vnum">${i+1}</span><span class="vtxt">${v}</span></div>`;}).join('')
+    : `<div style="text-align:center;padding:28px;color:rgba(255,255,255,.3);font-size:13px"><div style="font-size:34px;margin-bottom:10px">📖</div>Full Bible in complete app.<br><span style="font-size:11px;opacity:.7">Loaded: Genesis 1 · Psalms 23, 91 · John 1, 3 · Romans 8 · Proverbs 3 · Isaiah 40</span></div>`}
+</div>`;}
+
+function bibleNav(dir){
+  const chs=Object.keys(BIBLE[bibleBook]||{}).map(Number),idx=chs.indexOf(bibleChapter);
+  if(dir===-1&&idx>0){bibleChapter=chs[idx-1];render('bible');}
+  else if(dir===1&&idx<chs.length-1){bibleChapter=chs[idx+1];render('bible');}
+}
+function toggleHL(k,el){highlighted.has(k)?(highlighted.delete(k),el.classList.remove('hl')):(highlighted.add(k),el.classList.add('hl'));}
+function doSearch(){
+  const q=document.getElementById('bsearchInput')?.value?.toLowerCase();
+  if(!q)return;
+  for(const b of BOOKS)for(const ch of Object.keys(BIBLE[b]||{})){const vv=BIBLE[b][ch];for(let i=0;i<vv.length;i++)if(vv[i].toLowerCase().includes(q)){bibleBook=b;bibleChapter=Number(ch);render('bible');return;}}
+  alert('Verse not found in loaded passages.');
+}
+
+// ════════════════════════════════════════════════════
+// CONNECT
+// ════════════════════════════════════════════════════
+function connectHTML(){return `
+<div class="conn-hero"><div class="ch-title">Connect</div><div class="ch-sub">Get plugged into our community</div></div>
+<div class="stf">
+  <div class="stf-t">Pastors & Staff</div>
+  <div class="stf-row">
+    ${[{n:"Pastor Williams",r:"Senior Pastor",e:"👨🏾‍💼"},{n:"Elder Brown",r:"Associate",e:"🧑🏾‍⚕️"},{n:"Sis. Davis",r:"Worship",e:"👩🏾‍🎤"},{n:"Bro. Smith",r:"Youth",e:"👨🏽‍🏫"},{n:"Sis. Jones",r:"Admin",e:"👩🏾‍💻"}].map(s=>`<div class="sc"><div class="sav">${s.e}</div><div class="snm">${s.n}</div><div class="srl">${s.r}</div></div>`).join('')}
+  </div>
+</div>
+<div class="ctiles">
+  ${[
+    {i:"🤝",bg:"rgba(0,198,251,.12)",n:"New Here?",d:"Plan your first visit and learn what to expect"},
+    {i:"💬",bg:"rgba(142,45,226,.12)",n:"Community Groups",d:"Find a small group meeting near you"},
+    {i:"🙏",bg:"rgba(232,71,42,.12)",n:"Prayer Requests",d:"Submit a request to our prayer team"},
+    {i:"📍",bg:"rgba(39,174,96,.12)",n:"Location & Hours",d:"1234 Holiness Way · Atlanta, GA 30301"},
+    {i:"✉️",bg:"rgba(247,151,30,.12)",n:"Contact Us",d:"Reach out or speak with a pastor"},
+  ].map(c=>`<div class="ct"><div class="ct-ico" style="background:${c.bg}">${c.i}</div><div style="flex:1"><div class="ct-name">${c.n}</div><div class="ct-desc">${c.d}</div></div><div class="ct-arr">›</div></div>`).join('')}
+</div>`;}
+
+// ════════════════════════════════════════════════════
+// EVENTS
+// ════════════════════════════════════════════════════
+function eventsHTML(){return `
+<div class="ev-hero"><div class="eh-title">Events</div></div>
+<div class="evlist">
+  ${[
+    {e:"🎉",bg:"linear-gradient(135deg,#2d1b69,#8e2de2)",t:"Vacation Bible School",date:"June 10–14",d:"9 AM–12 PM · Fellowship Hall · Ages 4–12",tg:"UPCOMING",tc:"#8e2de2"},
+    {e:"🙏",bg:"linear-gradient(135deg,#1a1a2e,#2d1b69)",t:"Church-Wide Fast",date:"Feb 24–28",d:"Daily prayer call at 6 AM · Zoom available",tg:"NEXT WEEK",tc:"#e8472a"},
+    {e:"🎶",bg:"linear-gradient(135deg,#11998e,#38ef7d)",t:"Gospel Concert Night",date:"March 7",d:"7:00 PM · Sanctuary · Free admission",tg:"MARCH",tc:"#11998e"},
+    {e:"🍽️",bg:"linear-gradient(135deg,#f7971e,#ffd200)",t:"Men's Breakfast Fellowship",date:"March 1",d:"8:00 AM · Dining Hall · All men welcome",tg:"MARCH",tc:"#f7971e"},
+    {e:"🎓",bg:"linear-gradient(135deg,#005bea,#00c6fb)",t:"New Members Class",date:"March 15",d:"10 AM · Room 102 · 4-week series",tg:"MARCH",tc:"#005bea"},
+  ].map(ev=>`<div class="ecard"><div class="eban" style="background:${ev.bg}"><span style="position:relative;z-index:1">${ev.e}</span></div><div class="ebody"><div class="etag" style="background:${ev.tc}22;color:${ev.tc}">${ev.tg}</div><div class="etitle">${ev.t}</div><div style="font-size:11px;font-weight:700;color:${ev.tc};margin-bottom:3px">📅 ${ev.date}</div><div class="edet">${ev.d}</div><div class="ersvp" style="background:${ev.tc}22;color:${ev.tc}">RSVP NOW →</div></div></div>`).join('')}
+</div>`;}
+
+// ════════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════════
+function authHTML(){return `
+<div class="auth-hero">
+  <div class="auth-logo">✝</div>
+  <div class="auth-cname">United Holiness Church</div>
+  <div class="auth-csub">Sign in to your member account</div>
+</div>
+<div style="padding:12px 14px 0">
+  <div class="auth-tabs">
+    <div class="at${authMode==='login'?' on':''}" onclick="authMode='login';render('auth')">Sign In</div>
+    <div class="at${authMode==='signup'?' on':''}" onclick="authMode='signup';render('auth')">Create Account</div>
+  </div>
+</div>
+<div class="auth-form">
+  ${authMode==='signup'?`<div class="afl">Full Name</div><input class="ain" placeholder="First & Last Name"/>`:``}
+  <div class="afl">Email Address</div>
+  <input class="ain" type="email" placeholder="your@email.com"/>
+  ${authMode==='signup'?`<div class="afl">Phone Number</div><input class="ain" type="tel" placeholder="(555) 000-0000"/>`:``}
+  <div class="afl">Password</div>
+  <input class="ain" type="password" placeholder="${authMode==='signup'?'Create a strong password':'Enter your password'}"/>
+  ${authMode==='login'?`<div class="afgt">Forgot Password?</div>`:''}
+  <button class="asub" onclick="doLogin()">${authMode==='login'?'Sign In →':'Create Account →'}</button>
+  <div class="aor"><div class="aorline"></div><span class="aortxt">or continue with</span><div class="aorline"></div></div>
+  <div class="asocial">
+    <div class="asocial-btn">🍎 Apple</div>
+    <div class="asocial-btn">🔵 Google</div>
+    <div class="asocial-btn">📘 Facebook</div>
+  </div>
+  ${authMode==='signup'?`<div class="aterms">By creating an account you agree to our <span>Terms of Service</span> and <span>Privacy Policy</span>.</div>`:''}
+  <div class="askip" onclick="goTab('home')">Continue as guest <span>Skip →</span></div>
+</div>`;}
+
+function doLogin(){isLoggedIn=true;goTab('home');}
+
+// ════════════════════════════════════════════════════
+// MORE
+// ════════════════════════════════════════════════════
+function moreHTML(){return `
+<div style="background:#0a0a0a">
+  <div class="more-ph">
+    <div class="more-av">${isLoggedIn?'👤':'🔓'}</div>
+    <div>
+      <div class="more-nm">${isLoggedIn?'Welcome Back':'Sign In'}</div>
+      <div class="more-tg">${isLoggedIn?'UHCFC Member · Since 2019':'Tap to access your account'}</div>
+    </div>
+    <div class="more-ed" onclick="goTab('auth')">${isLoggedIn?'Edit →':'Sign In →'}</div>
+  </div>
+  <div class="mlist">
+    <div class="mgrp">Church</div>
+    ${[{i:"📖",bg:"rgba(106,61,232,.15)",l:"Bible Reading Plan"},{i:"🎵",bg:"rgba(0,198,251,.15)",l:"Worship Playlist",badge:"NEW"},{i:"📰",bg:"rgba(39,174,96,.15)",l:"Monthly Newsletter"},{i:"🏠",bg:"rgba(247,151,30,.12)",l:"Church Directory"},{i:"📝",bg:"rgba(232,71,42,.12)",l:"Sermon Notes"}].map(r=>`<div class="mrow"><div class="mrico" style="background:${r.bg}">${r.i}</div><div class="mrlbl">${r.l}</div>${r.badge?`<div class="mrbadge">${r.badge}</div>`:''}<div class="mrarr">›</div></div>`).join('')}
+    <div class="mgrp">Settings</div>
+    ${[{i:"🔔",bg:"rgba(232,71,42,.15)",l:"Notification Preferences"},{i:"🔒",bg:"rgba(0,90,234,.15)",l:"Privacy & Security"},{i:"❓",bg:"rgba(255,255,255,.07)",l:"Help & Support"},{i:"ℹ️",bg:"rgba(255,255,255,.07)",l:"About UHCFC App"}].map(r=>`<div class="mrow"><div class="mrico" style="background:${r.bg}">${r.i}</div><div class="mrlbl">${r.l}</div><div class="mrarr">›</div></div>`).join('')}
+    ${isLoggedIn?`<div class="mrow" style="margin-top:6px;border-color:rgba(232,71,42,.2)" onclick="isLoggedIn=false;render('more')"><div class="mrico" style="background:rgba(232,71,42,.12)">🚪</div><div class="mrlbl" style="color:#e8472a">Sign Out</div><div class="mrarr">›</div></div>`:''}
+  </div>
+</div>`;}
+
+// ── BOOT ────────────────────────────────────────────
+render('home');
+setTimeout(showPush, 2000);
+</script>
+</body>
+</html>
